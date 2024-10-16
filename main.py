@@ -1,9 +1,6 @@
 import requests
 import pygame
-from random import uniform
-
 from pygame import Vector2
-from pygame.sprite import AbstractGroup
 
 # Global Variables
 global dt
