@@ -77,7 +77,8 @@ while running:
     screen.fill(GREEN)
     enemies.draw(screen)
     projectiles.draw(screen)
-    screen.blit(player.image, player.rect.center)
+    weapon_drops.draw(screen)
+    screen.blit(player.image, player.rect)
 
     # Draw
 

@@ -177,7 +177,7 @@ class WeaponDrop(pygame.sprite.Sprite):
                 self.og_image = pygame.image.load("img/pistol.png")
             case Weapon.MACHINE_GUN:
                 self.og_image = pygame.image.load("img/machine_gun.png")
-                self.og_image = pygame.transform.scale(self.og_image, (164/2, 86/2))
+                self.og_image = pygame.transform.scale(self.og_image, (164/3, 86/3))
                 self.image = self.og_image.convert_alpha()
             case Weapon.SHOTGUN:
                 self.og_image = pygame.image.load("img/shotgun.png")
@@ -193,6 +193,5 @@ class WeaponDrop(pygame.sprite.Sprite):
     def update(self, player: Player, surface: pygame.Surface):
         self.image = pygame.transform.rotate(self.og_image, self.rot_angle)
         self.rect = self.image.get_rect(center=self.og_image.get_rect(center = self.center).center)
-        self.rot_angle += 1
+        self.rot_angle += 0.5
         self.collision(player)
-        surface.blit(self.image, self.rect.center)
