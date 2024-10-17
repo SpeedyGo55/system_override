@@ -71,12 +71,13 @@ while running:
     player.update(dt)
     enemies.update(player, enemies, dt)
     projectiles.update(enemies, dt)
+    weapon_drops.update(player, screen)
 
     # Draw
     screen.fill(GREEN)
     enemies.draw(screen)
     projectiles.draw(screen)
-    screen.blit(player.image, player.rect)
+    screen.blit(player.image, player.rect.center)
 
     # Draw
 

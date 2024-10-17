@@ -21,19 +21,38 @@ class Player(pygame.sprite.Sprite):
         self.image = pygame.image.load("img/player.png")
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
-        self.weapon = Weapon.MACHINE_GUN
+        self.weapon = Weapon.SHOTGUN
 
     def update(self, dt):
+        if self.health <= 0:
+            self.kill()
+            return
+        if self.border(self.rect.x, self.rect.y, dt):
+            return
         keys = pygame.key.get_pressed()
         if keys[pygame.K_LEFT]:
-            self.rect.x -= self.speed * dt
+            self.rect.x -= 1
         if keys[pygame.K_RIGHT]:
-            self.rect.x += self.speed * dt
+            self.rect.x += 1
         if keys[pygame.K_UP]:
-            self.rect.y -= self.speed * dt
+            self.rect.y -= 1
         if keys[pygame.K_DOWN]:
-            self.rect.y += self.speed * dt
+            self.rect.y += 1
 
+    def border(self, width, height, dt):
+        if self.rect.x < 0:
+            self.rect.x += self.speed * dt
+            return True
+        if self.rect.x > width:
+            self.rect.x -= self.speed * dt
+            return True
+        if self.rect.y < 0:
+            self.rect.y += self.speed * dt
+            return True
+        if self.rect.y > height:
+            self.rect.y -= self.speed * dt
+            return True
+        return False
     def change_weapon(self, weapon: Weapon):
         self.weapon = weapon
 
@@ -148,24 +167,32 @@ class Projectile(pygame.sprite.Sprite):
         self.rect.center = self.position
         self.collision(target)
 
-class WeaponsDrop(pygame.sprite.Sprite):
+class WeaponDrop(pygame.sprite.Sprite):
     def __init__(self, x, y, weapon: Weapon):
         super().__init__()
         self.weapon = weapon
+        self.rot_angle = 0
         match weapon:
             case Weapon.PISTOL:
-                self.image = pygame.image.load("img/pistol.png")
+                self.og_image = pygame.image.load("img/pistol.png")
             case Weapon.MACHINE_GUN:
-                self.image = pygame.image.load("img/machine_gun.png")
+                self.og_image = pygame.image.load("img/machine_gun.png")
+                self.og_image = pygame.transform.scale(self.og_image, (164/2, 86/2))
+                self.image = self.og_image.convert_alpha()
             case Weapon.SHOTGUN:
-                self.image = pygame.image.load("img/shotgun.png")
+                self.og_image = pygame.image.load("img/shotgun.png")
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
+        self.center = self.rect.center
 
     def collision(self, player: Player):
         if self.rect.colliderect(player.rect):
             player.change_weapon(self.weapon)
             self.kill()
 
-    def update(self, player: Player):
+    def update(self, player: Player, surface: pygame.Surface):
+        self.image = pygame.transform.rotate(self.og_image, self.rot_angle)
+        self.rect = self.image.get_rect(center=self.og_image.get_rect(center = self.center).center)
+        self.rot_angle += 1
         self.collision(player)
+        surface.blit(self.image, self.rect.center)
