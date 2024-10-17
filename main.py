@@ -60,7 +60,8 @@ while running:
         if event.type == pygame.MOUSEBUTTONDOWN and pygame.mouse.get_pressed(3)[2] == True:
             if player.weapon == Weapon.MACHINE_GUN:
                 machine_gun = True
-            player.shoot(projectiles)
+            else:
+                player.shoot(projectiles)
         if event.type == pygame.MOUSEBUTTONUP and pygame.mouse.get_pressed(3)[2] == False:
             machine_gun = False
 

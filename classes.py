@@ -1,6 +1,5 @@
 from json.encoder import INFINITY
 from random import uniform
-from typing import Tuple
 from enum import Enum
 
 import pygame
@@ -18,12 +17,21 @@ class Player(pygame.sprite.Sprite):
         super().__init__()
         self.speed = speed
         self.health = 100
-        self.image = pygame.image.load("img/player.png")
+        self.og_image = pygame.image.load("img/player.png")
+        self.image = self.og_image.convert_alpha()
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
         self.weapon = Weapon.SHOTGUN
+        self.direction = Vector2(1, 1)
 
     def update(self, dt):
+        direction_to_mouse = Vector2(pygame.mouse.get_pos()[0] - self.rect.centerx, pygame.mouse.get_pos()[1] - self.rect.centery)
+        if direction_to_mouse.length() != 0:
+            direction_to_mouse = direction_to_mouse.normalize()
+        angle = direction_to_mouse.angle_to(Vector2(1, 0))
+        self.image = pygame.transform.rotate(self.og_image, angle-90)
+        self.rect = self.image.get_rect(center=self.rect.center)
+
         if self.health <= 0:
             self.kill()
             return
@@ -53,33 +61,35 @@ class Player(pygame.sprite.Sprite):
             self.rect.y -= self.speed * dt
             return True
         return False
+
     def change_weapon(self, weapon: Weapon):
         self.weapon = weapon
 
     def shoot(self, target):
-        if self.weapon == Weapon.PISTOL:
-            mouse_x, mouse_y = pygame.mouse.get_pos()
-            new_projectile = Projectile(self.rect.centerx, self.rect.centery, 200,
-                                        Vector2(mouse_x - self.rect.centerx, mouse_y - self.rect.centery),
-                                        20,
-                                        1)
-            target.add(new_projectile)
-        elif self.weapon == Weapon.MACHINE_GUN:
-            mouse_x, mouse_y = pygame.mouse.get_pos()
-            new_projectile = Projectile(self.rect.centerx, self.rect.centery, 200,
-                                        Vector2(mouse_x - self.rect.centerx, mouse_y - self.rect.centery),
-                                        10,
-                                        3)
-            target.add(new_projectile)
-        elif self.weapon == Weapon.SHOTGUN:
-            mouse_x, mouse_y = pygame.mouse.get_pos()
-            for i in range(10):
+        match self.weapon:
+            case Weapon.PISTOL:
+                mouse_x, mouse_y = pygame.mouse.get_pos()
                 new_projectile = Projectile(self.rect.centerx, self.rect.centery, 200,
                                             Vector2(mouse_x - self.rect.centerx, mouse_y - self.rect.centery),
-                                            10,
                                             20,
                                             1)
                 target.add(new_projectile)
+            case Weapon.MACHINE_GUN:
+                mouse_x, mouse_y = pygame.mouse.get_pos()
+                new_projectile = Projectile(self.rect.centerx, self.rect.centery, 200,
+                                            Vector2(mouse_x - self.rect.centerx, mouse_y - self.rect.centery),
+                                            10,
+                                            3)
+                target.add(new_projectile)
+            case Weapon.SHOTGUN:
+                mouse_x, mouse_y = pygame.mouse.get_pos()
+                for i in range(10):
+                    new_projectile = Projectile(self.rect.centerx, self.rect.centery, 200,
+                                                Vector2(mouse_x - self.rect.centerx, mouse_y - self.rect.centery),
+                                                10,
+                                                20,
+                                                1)
+                    target.add(new_projectile)
 
 
 
