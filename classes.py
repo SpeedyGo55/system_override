@@ -1,5 +1,5 @@
 from json.encoder import INFINITY
-from random import uniform
+from random import uniform, random, randint, choice
 from enum import Enum
 
 import pygame
@@ -28,12 +28,14 @@ class Player(pygame.sprite.Sprite):
         direction_to_mouse = Vector2(pygame.mouse.get_pos()[0] - self.rect.centerx, pygame.mouse.get_pos()[1] - self.rect.centery)
         if direction_to_mouse.length() != 0:
             direction_to_mouse = direction_to_mouse.normalize()
-        angle = direction_to_mouse.angle_to(Vector2(1, 0))
+        self.direction = direction_to_mouse
+        angle = self.direction.angle_to(Vector2(1, 0))
         self.image = pygame.transform.rotate(self.og_image, angle-90)
         self.rect = self.image.get_rect(center=self.rect.center)
 
         if self.health <= 0:
             self.kill()
+            print("You died")
             return
         if self.border(self.rect.x, self.rect.y, dt):
             return
@@ -68,24 +70,21 @@ class Player(pygame.sprite.Sprite):
     def shoot(self, target):
         match self.weapon:
             case Weapon.PISTOL:
-                mouse_x, mouse_y = pygame.mouse.get_pos()
                 new_projectile = Projectile(self.rect.centerx, self.rect.centery, 200,
-                                            Vector2(mouse_x - self.rect.centerx, mouse_y - self.rect.centery),
+                                            self.direction,
                                             20,
                                             1)
                 target.add(new_projectile)
             case Weapon.MACHINE_GUN:
-                mouse_x, mouse_y = pygame.mouse.get_pos()
                 new_projectile = Projectile(self.rect.centerx, self.rect.centery, 200,
-                                            Vector2(mouse_x - self.rect.centerx, mouse_y - self.rect.centery),
+                                            self.direction,
                                             10,
                                             3)
                 target.add(new_projectile)
             case Weapon.SHOTGUN:
-                mouse_x, mouse_y = pygame.mouse.get_pos()
                 for i in range(10):
                     new_projectile = Projectile(self.rect.centerx, self.rect.centery, 200,
-                                                Vector2(mouse_x - self.rect.centerx, mouse_y - self.rect.centery),
+                                                self.direction,
                                                 10,
                                                 20,
                                                 1)
@@ -99,10 +98,12 @@ class Enemy(pygame.sprite.Sprite):
         self.min_distance = min_distance
         self.speed = speed
         self.health = health
-        self.image = pygame.image.load("img/enemy.png")
+        self.og_image = pygame.image.load("img/enemy.png")
+        self.image = self.og_image.convert_alpha()
         self.direction = Vector2(1, 1)
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
+        self.weapon = choice([Weapon.PISTOL, Weapon.MACHINE_GUN, Weapon.SHOTGUN])
 
     def resolve_collision(self, groups: [pygame.sprite.Group]):
         # Check for collisions with other enemies in the group
@@ -124,13 +125,17 @@ class Enemy(pygame.sprite.Sprite):
                         other.rect.x -= direction.x * overlap_distance / 2
                         other.rect.y -= direction.y * overlap_distance / 2
 
-    def update(self, player: Player, enemies: pygame.sprite.Group, dt):
+    def update(self, player: Player, enemies: pygame.sprite.Group, projectiles, dt):
         # Existing movement logic
         if self.health <= 0:
             self.kill()
             return
         distance = ((self.rect.x - player.rect.x) ** 2 + (self.rect.y - player.rect.y) ** 2) ** 0.5
         direction: Vector2 = Vector2(player.rect.x - self.rect.x, player.rect.y - self.rect.y)
+
+        angle = direction.angle_to(Vector2(1, 0))
+        self.image = pygame.transform.rotate(self.og_image, angle-90)
+        self.rect = self.image.get_rect(center=self.rect.center)
 
         if direction.length() != 0:
             direction = direction.normalize()
@@ -139,12 +144,38 @@ class Enemy(pygame.sprite.Sprite):
             self.rect.x += direction.x * self.speed * dt
             self.rect.y += direction.y * self.speed * dt
 
+        if distance < 100:
+            self.shoot(projectiles)
+
 
         self.direction = direction
 
         # Now resolve any overlap with other enemies
         self.resolve_collision([enemies, pygame.sprite.Group([player])])
 
+    def shoot(self, target):
+        print(self.weapon)
+        match self.weapon:
+            case Weapon.PISTOL:
+                new_projectile = Projectile(self.rect.centerx, self.rect.centery, 100,
+                                            self.direction,
+                                            10,
+                                            1)
+                target.add(new_projectile)
+            case Weapon.MACHINE_GUN:
+                new_projectile = Projectile(self.rect.centerx, self.rect.centery, 100,
+                                            self.direction,
+                                            5,
+                                            3)
+                target.add(new_projectile)
+            case Weapon.SHOTGUN:
+                for i in range(10):
+                    new_projectile = Projectile(self.rect.centerx, self.rect.centery, 100,
+                                                self.direction,
+                                                5,
+                                                20,
+                                                1)
+                    target.add(new_projectile)
 class Projectile(pygame.sprite.Sprite):
     def __init__(self, x: int, y: int, speed, direction: Vector2, damage, accuracy: float = 0, lifetime: float = INFINITY):
         super().__init__()

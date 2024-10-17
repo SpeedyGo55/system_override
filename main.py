@@ -39,7 +39,8 @@ clock = pygame.time.Clock()
 
 player = Player(WIDTH // 2, HEIGHT // 2, 100)
 enemies = pygame.sprite.Group()
-projectiles = pygame.sprite.Group()
+player_projectiles = pygame.sprite.Group()
+enemy_projectiles = pygame.sprite.Group()
 weapon_drops = pygame.sprite.Group()
 machine_gun = False
 running = True
@@ -61,23 +62,25 @@ while running:
             if player.weapon == Weapon.MACHINE_GUN:
                 machine_gun = True
             else:
-                player.shoot(projectiles)
+                player.shoot(player_projectiles)
         if event.type == pygame.MOUSEBUTTONUP and pygame.mouse.get_pressed(3)[2] == False:
             machine_gun = False
 
     # Update
     if machine_gun and time.time() - last_shot > 0.025:
-        player.shoot(projectiles)
+        player.shoot(player_projectiles)
         last_shot = time.time()
     player.update(dt)
-    enemies.update(player, enemies, dt)
-    projectiles.update(enemies, dt)
+    enemies.update(player, enemies, enemy_projectiles, dt)
+    player_projectiles.update(enemies, dt)
+    enemy_projectiles.update([player], dt)
     weapon_drops.update(player, screen)
 
     # Draw
     screen.fill(GREEN)
     enemies.draw(screen)
-    projectiles.draw(screen)
+    player_projectiles.draw(screen)
+    enemy_projectiles.draw(screen)
     weapon_drops.draw(screen)
     screen.blit(player.image, player.rect)
 
