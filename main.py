@@ -18,6 +18,7 @@ BLUE = (0, 0, 255)
 WIDTH, HEIGHT = 800, 600
 FPS = 60
 
+
 # Functions
 
 
@@ -29,7 +30,7 @@ class Player(pygame.sprite.Sprite):
         self.image = pygame.Surface((50, 50))
         self.image.fill(BLUE)
         self.rect = self.image.get_rect()
-        self.rect.center = (x , y)
+        self.rect.center = (x, y)
 
     def update(self):
         keys = pygame.key.get_pressed()
@@ -42,39 +43,42 @@ class Player(pygame.sprite.Sprite):
         if keys[pygame.K_DOWN]:
             self.rect.y += self.speed * dt
 
+
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, x, y, speed=500, min_distance=50):
         super().__init__()
         self.min_distance = min_distance
         self.speed = speed
-        self.image = pygame.Surface((50, 50))
-        self.image.fill(RED)
+        self.image = pygame.image.load("img/enemy.png")
+        self.direction = Vector2(1, 1)
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
 
-    def resolve_collision(self, group: pygame.sprite.Group):
+    def resolve_collision(self, groups: [pygame.sprite.Group]):
         # Check for collisions with other enemies in the group
-        for other in group:
-            if other != self:  # Don't check against itself
-                distance = ((self.rect.x - other.rect.x) ** 2 + (self.rect.y - other.rect.y) ** 2) ** 0.5
+        for group in groups:
+            for other in group:
+                if other != self:  # Don't check against itself
+                    distance = ((self.rect.x - other.rect.x) ** 2 + (self.rect.y - other.rect.y) ** 2) ** 0.5
 
-                # If there is overlap (distance < size of one enemy), resolve it
-                if distance < self.rect.width:
-                    direction = Vector2(self.rect.x - other.rect.x, self.rect.y - other.rect.y)
-                    if direction.length() != 0:
-                        direction = direction.normalize()
-                    overlap_distance = self.rect.width - distance
-                    # Move this enemy out of the overlap by half the overlap distance
-                    self.rect.x += direction.x * overlap_distance / 2
-                    self.rect.y += direction.y * overlap_distance / 2
-                    # Move the other enemy out by the other half
-                    other.rect.x -= direction.x * overlap_distance / 2
-                    other.rect.y -= direction.y * overlap_distance / 2
+                    # If there is overlap (distance < size of one enemy), resolve it
+                    if distance < self.rect.width:
+                        direction = Vector2(self.rect.x - other.rect.x, self.rect.y - other.rect.y)
+                        if direction.length() != 0:
+                            direction = direction.normalize()
+                        overlap_distance = self.rect.width - distance
+                        # Move this enemy out of the overlap by half the overlap distance
+                        self.rect.x += direction.x * overlap_distance / 2
+                        self.rect.y += direction.y * overlap_distance / 2
+                        # Move the other enemy out by the other half
+                        other.rect.x -= direction.x * overlap_distance / 2
+                        other.rect.y -= direction.y * overlap_distance / 2
 
     def update(self, player: Player, enemies: pygame.sprite.Group):
         # Existing movement logic
         distance = ((self.rect.x - player.rect.x) ** 2 + (self.rect.y - player.rect.y) ** 2) ** 0.5
         direction: Vector2 = Vector2(player.rect.x - self.rect.x, player.rect.y - self.rect.y)
+
         if direction.length() != 0:
             direction = direction.normalize()
 
@@ -85,8 +89,10 @@ class Enemy(pygame.sprite.Sprite):
             self.rect.x -= direction.x * self.speed * dt * 0.1
             self.rect.y -= direction.y * self.speed * dt * 0.1
 
+        self.direction = direction
+
         # Now resolve any overlap with other enemies
-        self.resolve_collision(enemies)
+        self.resolve_collision([enemies, pygame.sprite.Group([player])])
 
 
 # Initialize Pygame
@@ -114,7 +120,7 @@ while running:
 
     # Update
     player.update()
-    enemies.update()
+    enemies.update(player, enemies)
 
     # Draw
     screen.fill(GREEN)
