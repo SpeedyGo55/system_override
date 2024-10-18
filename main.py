@@ -56,7 +56,7 @@ while running:
             new_enemy = Enemy(mouse_x, mouse_y, 75, 100, 100)
             enemies.add(new_enemy)
         if event.type == pygame.MOUSEBUTTONDOWN and pygame.mouse.get_pressed(3)[1] == True:
-            new_drop = WeaponDrop(uniform(0, WIDTH), uniform(0, HEIGHT), Weapon.MACHINE_GUN)
+            new_drop = WeaponDrop(uniform(0, WIDTH), uniform(0, HEIGHT), choice(list(Weapon)))
             weapon_drops.add(new_drop)
         if event.type == pygame.MOUSEBUTTONDOWN and pygame.mouse.get_pressed(3)[2] == True:
             if player.weapon == Weapon.MACHINE_GUN:

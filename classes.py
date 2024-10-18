@@ -236,12 +236,14 @@ class WeaponDrop(pygame.sprite.Sprite):
         match weapon:
             case Weapon.PISTOL:
                 self.og_image = pygame.image.load("img/pistol.png")
+                self.image = self.og_image.convert_alpha()
             case Weapon.MACHINE_GUN:
                 self.og_image = pygame.image.load("img/machine_gun.png")
                 self.og_image = pygame.transform.scale(self.og_image, (164/3, 86/3))
                 self.image = self.og_image.convert_alpha()
             case Weapon.SHOTGUN:
                 self.og_image = pygame.image.load("img/shotgun.png")
+                self.image = self.og_image.convert_alpha()
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
         self.center = self.rect.center
