@@ -31,7 +31,7 @@ FPS = 60
 
 # Initialize Pygame
 pygame.init()
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
+screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
 pygame.display.set_caption("Pygame Template")
 clock = pygame.time.Clock()
 
@@ -47,6 +47,8 @@ running = True
 dt = clock.tick(FPS) / 1000
 last_shot = time.time()
 while running:
+    if player.health <= 0:
+        print("You Died")
     # Events
     for event in pygame.event.get():
         if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):

@@ -17,7 +17,7 @@ class Player(pygame.sprite.Sprite):
     def __init__(self, x, y, speed):
         super().__init__()
         self.speed = speed
-        self.health = 100
+        self.health = 1000
         self.og_image = pygame.image.load("img/player.png")
         self.image = self.og_image.convert_alpha()
         self.rect = self.image.get_rect()
@@ -37,18 +37,17 @@ class Player(pygame.sprite.Sprite):
 
         if self.health <= 0:
             self.kill()
-            print("You died")
             return
         if self.border(self.rect.x, self.rect.y, dt):
             return
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_LEFT]:
+        if keys[pygame.K_a]:
             self.rect.x -= 1
-        if keys[pygame.K_RIGHT]:
+        if keys[pygame.K_d]:
             self.rect.x += 1
-        if keys[pygame.K_UP]:
+        if keys[pygame.K_w]:
             self.rect.y -= 1
-        if keys[pygame.K_DOWN]:
+        if keys[pygame.K_s]:
             self.rect.y += 1
 
     def border(self, width, height, dt):
