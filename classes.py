@@ -1,6 +1,6 @@
 import time
 from json.encoder import INFINITY
-from random import uniform, random, randint, choice
+from random import uniform, choice
 from enum import Enum
 
 import pygame
@@ -8,10 +8,12 @@ from pygame.math import Vector2
 
 BLUE = (0, 0, 255)
 
+
 class Weapon(Enum):
     PISTOL = 1
     MACHINE_GUN = 2
     SHOTGUN = 3
+
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, x, y, speed):
@@ -27,12 +29,15 @@ class Player(pygame.sprite.Sprite):
         self.last_shot = time.time()
 
     def update(self, dt):
-        direction_to_mouse = Vector2(pygame.mouse.get_pos()[0] - self.rect.centerx, pygame.mouse.get_pos()[1] - self.rect.centery)
+        direction_to_mouse = Vector2(
+            pygame.mouse.get_pos()[0] - self.rect.centerx,
+            pygame.mouse.get_pos()[1] - self.rect.centery,
+        )
         if direction_to_mouse.length() != 0:
             direction_to_mouse = direction_to_mouse.normalize()
         self.direction = direction_to_mouse
         angle = self.direction.angle_to(Vector2(1, 0))
-        self.image = pygame.transform.rotate(self.og_image, angle-90)
+        self.image = pygame.transform.rotate(self.og_image, angle - 90)
         self.rect = self.image.get_rect(center=self.rect.center)
 
         if self.health <= 0:
@@ -71,35 +76,36 @@ class Player(pygame.sprite.Sprite):
     def shoot(self, target):
         match self.weapon:
             case Weapon.PISTOL:
-                if time.time() - self.last_shot < 1:
+                if time.time() - self.last_shot < 0.2:
                     return
-                new_projectile = Projectile(self.rect.centerx, self.rect.centery, 100,
-                                            self.direction,
-                                            10,
-                                            1)
+                new_projectile = Projectile(
+                    self.rect.centerx, self.rect.centery, 100, self.direction, 25, 1
+                )
                 target.add(new_projectile)
                 self.last_shot = time.time()
             case Weapon.MACHINE_GUN:
                 if time.time() - self.last_shot < 0.1:
                     return
-                new_projectile = Projectile(self.rect.centerx, self.rect.centery, 100,
-                                            self.direction,
-                                            5,
-                                            3)
+                new_projectile = Projectile(
+                    self.rect.centerx, self.rect.centery, 100, self.direction, 10, 3
+                )
                 target.add(new_projectile)
                 self.last_shot = time.time()
             case Weapon.SHOTGUN:
                 if time.time() - self.last_shot < 3:
                     return
                 for i in range(10):
-                    new_projectile = Projectile(self.rect.centerx, self.rect.centery, 100,
-                                                self.direction,
-                                                5,
-                                                20,
-                                                1)
+                    new_projectile = Projectile(
+                        self.rect.centerx,
+                        self.rect.centery,
+                        100,
+                        self.direction,
+                        10,
+                        20,
+                        1,
+                    )
                     target.add(new_projectile)
                 self.last_shot = time.time()
-
 
 
 class Enemy(pygame.sprite.Sprite):
@@ -121,11 +127,16 @@ class Enemy(pygame.sprite.Sprite):
         for group in groups:
             for other in group:
                 if other != self:  # Don't check against itself
-                    distance = ((self.rect.x - other.rect.x) ** 2 + (self.rect.y - other.rect.y) ** 2) ** 0.5
+                    distance = (
+                        (self.rect.x - other.rect.x) ** 2
+                        + (self.rect.y - other.rect.y) ** 2
+                    ) ** 0.5
 
                     # If there is overlap (distance < size of one enemy), resolve it
                     if distance < self.rect.width:
-                        direction = Vector2(self.rect.x - other.rect.x, self.rect.y - other.rect.y)
+                        direction = Vector2(
+                            self.rect.x - other.rect.x, self.rect.y - other.rect.y
+                        )
                         if direction.length() != 0:
                             direction = direction.normalize()
                         overlap_distance = self.rect.width - distance
@@ -141,11 +152,15 @@ class Enemy(pygame.sprite.Sprite):
         if self.health <= 0:
             self.kill()
             return
-        distance = ((self.rect.x - player.rect.x) ** 2 + (self.rect.y - player.rect.y) ** 2) ** 0.5
-        direction: Vector2 = Vector2(player.rect.x - self.rect.x, player.rect.y - self.rect.y)
+        distance = (
+            (self.rect.x - player.rect.x) ** 2 + (self.rect.y - player.rect.y) ** 2
+        ) ** 0.5
+        direction: Vector2 = Vector2(
+            player.rect.x - self.rect.x, player.rect.y - self.rect.y
+        )
 
         angle = direction.angle_to(Vector2(1, 0))
-        self.image = pygame.transform.rotate(self.og_image, angle-90)
+        self.image = pygame.transform.rotate(self.og_image, angle - 90)
         self.rect = self.image.get_rect(center=self.rect.center)
 
         if direction.length() != 0:
@@ -158,7 +173,6 @@ class Enemy(pygame.sprite.Sprite):
         if distance < 100:
             self.shoot(projectiles)
 
-
         self.direction = direction
 
         # Now resolve any overlap with other enemies
@@ -169,34 +183,47 @@ class Enemy(pygame.sprite.Sprite):
             case Weapon.PISTOL:
                 if time.time() - self.last_shot < 1:
                     return
-                new_projectile = Projectile(self.rect.centerx, self.rect.centery, 100,
-                                            self.direction,
-                                            10,
-                                            1)
+                new_projectile = Projectile(
+                    self.rect.centerx, self.rect.centery, 100, self.direction, 10, 1
+                )
                 target.add(new_projectile)
                 self.last_shot = time.time()
             case Weapon.MACHINE_GUN:
                 if time.time() - self.last_shot < 0.1:
                     return
-                new_projectile = Projectile(self.rect.centerx, self.rect.centery, 100,
-                                            self.direction,
-                                            5,
-                                            3)
+                new_projectile = Projectile(
+                    self.rect.centerx, self.rect.centery, 100, self.direction, 5, 3
+                )
                 target.add(new_projectile)
                 self.last_shot = time.time()
             case Weapon.SHOTGUN:
                 if time.time() - self.last_shot < 3:
                     return
                 for i in range(10):
-                    new_projectile = Projectile(self.rect.centerx, self.rect.centery, 100,
-                                                self.direction,
-                                                5,
-                                                20,
-                                                1)
+                    new_projectile = Projectile(
+                        self.rect.centerx,
+                        self.rect.centery,
+                        100,
+                        self.direction,
+                        5,
+                        20,
+                        1,
+                    )
                     target.add(new_projectile)
                 self.last_shot = time.time()
+
+
 class Projectile(pygame.sprite.Sprite):
-    def __init__(self, x: int, y: int, speed, direction: Vector2, damage, accuracy: float = 0, lifetime: float = INFINITY):
+    def __init__(
+        self,
+        x: int,
+        y: int,
+        speed,
+        direction: Vector2,
+        damage,
+        accuracy: float = 0,
+        lifetime: float = INFINITY,
+    ):
         super().__init__()
         if direction.length() == 0:
             direction = Vector2(1, 0)
@@ -215,7 +242,12 @@ class Projectile(pygame.sprite.Sprite):
                 enemy.health -= self.damage
                 self.kill()
                 return
-            if self.rect.x < 0 or self.rect.x > 800 or self.rect.y < 0 or self.rect.y > 600:
+            if (
+                self.rect.x < 0
+                or self.rect.x > 800
+                or self.rect.y < 0
+                or self.rect.y > 600
+            ):
                 self.kill()
 
     def update(self, target, dt):
@@ -226,6 +258,7 @@ class Projectile(pygame.sprite.Sprite):
                 self.kill()
         self.rect.center = self.position
         self.collision(target)
+
 
 class WeaponDrop(pygame.sprite.Sprite):
     def __init__(self, x, y, weapon: Weapon):
@@ -238,7 +271,7 @@ class WeaponDrop(pygame.sprite.Sprite):
                 self.image = self.og_image.convert_alpha()
             case Weapon.MACHINE_GUN:
                 self.og_image = pygame.image.load("img/machine_gun.png")
-                self.og_image = pygame.transform.scale(self.og_image, (164/3, 86/3))
+                self.og_image = pygame.transform.scale(self.og_image, (164 / 3, 86 / 3))
                 self.image = self.og_image.convert_alpha()
             case Weapon.SHOTGUN:
                 self.og_image = pygame.image.load("img/shotgun.png")
@@ -254,6 +287,8 @@ class WeaponDrop(pygame.sprite.Sprite):
 
     def update(self, player: Player, surface: pygame.Surface):
         self.image = pygame.transform.rotate(self.og_image, self.rot_angle)
-        self.rect = self.image.get_rect(center=self.og_image.get_rect(center = self.center).center)
+        self.rect = self.image.get_rect(
+            center=self.og_image.get_rect(center=self.center).center
+        )
         self.rot_angle += 0.5
         self.collision(player)
