@@ -6,6 +6,8 @@ from enum import Enum
 import pygame
 from pygame.math import Vector2
 
+from config import WIDTH, HEIGHT
+
 BLUE = (0, 0, 255)
 
 
@@ -20,13 +22,16 @@ class Player(pygame.sprite.Sprite):
         super().__init__()
         self.speed = speed
         self.health = 1000
-        self.og_image = pygame.image.load("img/player.png")
+        self.weapon = Weapon.PISTOL
+        self.og_image = pygame.image.load("img/MCHG.png")
+        self.change_weapon(choice(list(Weapon)))
         self.image = self.og_image.convert_alpha()
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
-        self.weapon = Weapon.SHOTGUN
+        self.size = (self.rect.width + self.rect.height) / 4
         self.direction = Vector2(1, 1)
         self.last_shot = time.time()
+        self.score = 0
 
     def update(self, dt):
         direction_to_mouse = Vector2(
@@ -37,13 +42,12 @@ class Player(pygame.sprite.Sprite):
             direction_to_mouse = direction_to_mouse.normalize()
         self.direction = direction_to_mouse
         angle = self.direction.angle_to(Vector2(1, 0))
-        self.image = pygame.transform.rotate(self.og_image, angle - 90)
+        self.image = pygame.transform.rotate(self.og_image, angle + 90)
         self.rect = self.image.get_rect(center=self.rect.center)
-
         if self.health <= 0:
             self.kill()
             return
-        if self.border(self.rect.x, self.rect.y, dt):
+        if self.border(WIDTH, HEIGHT, dt):
             return
         keys = pygame.key.get_pressed()
         if keys[pygame.K_a]:
@@ -71,6 +75,14 @@ class Player(pygame.sprite.Sprite):
         return False
 
     def change_weapon(self, weapon: Weapon):
+        match weapon:
+            case Weapon.PISTOL:
+                self.og_image = pygame.image.load("img/MCHG.png")
+            case Weapon.MACHINE_GUN:
+                self.og_image = pygame.image.load("img/MCAR.png")
+            case Weapon.SHOTGUN:
+                self.og_image = pygame.image.load("img/MCSG.png")
+
         self.weapon = weapon
 
     def shoot(self, target):
@@ -118,6 +130,7 @@ class Enemy(pygame.sprite.Sprite):
         self.image = self.og_image.convert_alpha()
         self.direction = Vector2(1, 1)
         self.rect = self.image.get_rect()
+        self.size = (self.rect.width + self.rect.height) / 4
         self.rect.center = (x, y)
         self.weapon = choice([Weapon.PISTOL, Weapon.MACHINE_GUN, Weapon.SHOTGUN])
         self.last_shot = time.time()
@@ -128,35 +141,39 @@ class Enemy(pygame.sprite.Sprite):
             for other in group:
                 if other != self:  # Don't check against itself
                     distance = (
-                        (self.rect.x - other.rect.x) ** 2
-                        + (self.rect.y - other.rect.y) ** 2
+                        (self.rect.centerx - other.rect.centerx) ** 2
+                        + (self.rect.centery - other.rect.centery) ** 2
                     ) ** 0.5
 
                     # If there is overlap (distance < size of one enemy), resolve it
                     if distance < self.rect.width:
                         direction = Vector2(
-                            self.rect.x - other.rect.x, self.rect.y - other.rect.y
+                            self.rect.centerx - other.rect.centerx,
+                            self.rect.centery - other.rect.centery,
                         )
                         if direction.length() != 0:
                             direction = direction.normalize()
                         overlap_distance = self.rect.width - distance
                         # Move this enemy out of the overlap by half the overlap distance
-                        self.rect.x += direction.x * overlap_distance / 2
-                        self.rect.y += direction.y * overlap_distance / 2
+                        self.rect.centerx += direction.x * overlap_distance / 2
+                        self.rect.centery += direction.y * overlap_distance / 2
                         # Move the other enemy out by the other half
-                        other.rect.x -= direction.x * overlap_distance / 2
-                        other.rect.y -= direction.y * overlap_distance / 2
+                        other.rect.centerx -= direction.x * overlap_distance / 2
+                        other.rect.centery -= direction.y * overlap_distance / 2
 
     def update(self, player: Player, enemies: pygame.sprite.Group, projectiles, dt):
         # Existing movement logic
         if self.health <= 0:
             self.kill()
+            player.score += 1
             return
         distance = (
-            (self.rect.x - player.rect.x) ** 2 + (self.rect.y - player.rect.y) ** 2
+            (self.rect.centerx - player.rect.centerx) ** 2
+            + (self.rect.centery - player.rect.centery) ** 2
         ) ** 0.5
         direction: Vector2 = Vector2(
-            player.rect.x - self.rect.x, player.rect.y - self.rect.y
+            player.rect.centerx - self.rect.centerx,
+            player.rect.centery - self.rect.centery,
         )
 
         angle = direction.angle_to(Vector2(1, 0))
@@ -167,8 +184,8 @@ class Enemy(pygame.sprite.Sprite):
             direction = direction.normalize()
 
         if distance > self.min_distance:
-            self.rect.x += direction.x * self.speed * dt
-            self.rect.y += direction.y * self.speed * dt
+            self.rect.centerx += direction.x * self.speed * dt
+            self.rect.centery += direction.y * self.speed * dt
 
         if distance < 100:
             self.shoot(projectiles)
@@ -229,7 +246,7 @@ class Projectile(pygame.sprite.Sprite):
             direction = Vector2(1, 0)
         self.speed = speed
         self.damage = damage
-        self.image: pygame.image = pygame.image.load("img/projectile.png")
+        self.image: pygame.image = pygame.image.load("img/Bullet.png")
         self.rect: pygame.rect = self.image.get_rect()
         self.rect.center = (x, y)
         self.position: Vector2 = Vector2(x, y)
@@ -238,15 +255,19 @@ class Projectile(pygame.sprite.Sprite):
 
     def collision(self, target):
         for enemy in target:
-            if self.rect.colliderect(enemy.rect):
+            distance = (
+                (self.rect.centerx - enemy.rect.centerx) ** 2
+                + (self.rect.centery - enemy.rect.centery) ** 2
+            ) ** 0.5
+            if distance < enemy.size:
                 enemy.health -= self.damage
                 self.kill()
                 return
             if (
-                self.rect.x < 0
-                or self.rect.x > 800
-                or self.rect.y < 0
-                or self.rect.y > 600
+                self.rect.centerx < 0
+                or self.rect.centerx > 800
+                or self.rect.centery < 0
+                or self.rect.centery > 600
             ):
                 self.kill()
 
@@ -268,6 +289,7 @@ class WeaponDrop(pygame.sprite.Sprite):
         match weapon:
             case Weapon.PISTOL:
                 self.og_image = pygame.image.load("img/pistol.png")
+                self.og_image = pygame.transform.scale(self.og_image, (100 / 3, 61 / 3))
                 self.image = self.og_image.convert_alpha()
             case Weapon.MACHINE_GUN:
                 self.og_image = pygame.image.load("img/machine_gun.png")
@@ -275,6 +297,7 @@ class WeaponDrop(pygame.sprite.Sprite):
                 self.image = self.og_image.convert_alpha()
             case Weapon.SHOTGUN:
                 self.og_image = pygame.image.load("img/shotgun.png")
+                self.og_image = pygame.transform.scale(self.og_image, (157 / 3, 36 / 3))
                 self.image = self.og_image.convert_alpha()
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
@@ -291,4 +314,20 @@ class WeaponDrop(pygame.sprite.Sprite):
             center=self.og_image.get_rect(center=self.center).center
         )
         self.rot_angle += 0.5
+        self.collision(player)
+
+
+class MedPack(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.image = pygame.image.load("img/HP.png")
+        self.rect = self.image.get_rect()
+        self.rect.center = (x, y)
+
+    def collision(self, player: Player):
+        if self.rect.colliderect(player.rect):
+            player.health = min(1000, player.health + 500)
+            self.kill()
+
+    def update(self, player: Player):
         self.collision(player)
