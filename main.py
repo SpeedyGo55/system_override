@@ -1,6 +1,8 @@
+import json
 import time
 from random import uniform, choice, random
 
+import pygame_textinput
 import pygame
 
 from classes import Player, Enemy, WeaponDrop, Weapon, MedPack
@@ -9,10 +11,12 @@ from constants import GREEN
 
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
-pygame.display.set_caption("Pygame Template")
+pygame.display.set_caption("System Override")
 pixelify_sans = pygame.font.Font("Fonts/PixelifySans.ttf", 32)
-score_font = pygame.font.Font("Fonts/PixelifySans.ttf", 16)
+score_font = pygame.font.Font("Fonts/PixelifySans.ttf", 24)
 clock = pygame.time.Clock()
+name = ""
+config = json.load(open("config.json", "r"))
 
 
 def spawn_random_enemy():
@@ -32,6 +36,48 @@ def spawn_random_weapon_drop():
 def spawn_random_med_pack():
     new_med_pack = MedPack(uniform(0, WIDTH), uniform(0, HEIGHT), 10)
     med_packs.add(new_med_pack)
+
+def leader_board_screen():
+
+def start_screen():
+    global screen, pixelify_sans, running, name
+    screen.fill(GREEN)
+    events = pygame.event.get()
+    title_text = pixelify_sans.render(
+        "System Override",
+        True,
+        (255, 0, 0),
+    )
+    title_rect = title_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 100))
+
+    name_input = pygame_textinput.TextInputVisualizer()
+
+    start_text = pixelify_sans.render("Start", True, (0, 0, 0))
+    start_rect = start_text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+    quit_text = pixelify_sans.render("Quit", True, (0, 0, 0))
+    quit_rect = quit_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 50))
+    leader_board_text = pixelify_sans.render("Leader Board", True, (0, 0, 0))
+    leader_board_rect = leader_board_text.get_rect(
+        center=(WIDTH // 2, HEIGHT // 2 + 100)
+    )
+
+    name_input.update(events)
+
+    for event in events:
+        if event.type == pygame.QUIT or (
+            event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE
+        ):
+            running = False
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            mouse_x, mouse_y = pygame.mouse.get_pos()
+            if start_rect.collidepoint(mouse_x, mouse_y):
+                return name_input.value()
+            elif quit_rect.collidepoint(mouse_x, mouse_y):
+                running = False
+            elif leader_board_rect.collidepoint(mouse_x, mouse_y):
+                leader_board_screen()
+
+    pygame.display.flip()
 
 
 # Main Loop
@@ -77,9 +123,7 @@ def play_screen():
     high_score_text = score_font.render(
         f"High Score: {player.high_score}", True, (0, 0, 0)
     )
-    high_score_rect = high_score_text.get_rect(topleft=(0, 16))
-    screen.blit(score_text, score_rect)
-    screen.blit(high_score_text, high_score_rect)
+    high_score_rect = high_score_text.get_rect(topleft=(0, 24))
 
     player.update(dt)
     enemies.update(player, enemies, enemy_projectiles, dt)
@@ -95,6 +139,8 @@ def play_screen():
     weapon_drops.draw(screen)
     med_packs.draw(screen)
     screen.blit(player.image, player.rect)
+    screen.blit(score_text, score_rect)
+    screen.blit(high_score_text, high_score_rect)
     # Draw
     # Update
 
@@ -113,13 +159,13 @@ def death_screen():
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT or (
-            event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE
+                event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE
         ):
             running = False
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             mouse_x, mouse_y = pygame.mouse.get_pos()
             if again_rect.collidepoint(mouse_x, mouse_y):
-                player = Player(WIDTH // 2, HEIGHT // 2, 100)
+                player = Player(WIDTH // 2, HEIGHT // 2, 100, player.high_score)
                 enemies.empty()
                 enemy_projectiles.empty()
                 player_projectiles.empty()
@@ -143,10 +189,14 @@ weapon_drops = pygame.sprite.Group()
 med_packs = pygame.sprite.Group()
 machine_gun = False
 running = True
+started = False
 dt = clock.tick(FPS) / 1000
 last_shot = time.time()
 
 while running:
+    if started == False:
+        name = start_screen()
+        started = True
     if player.health <= 0:
         death_screen()
     # Events

@@ -18,7 +18,7 @@ class Weapon(Enum):
 
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, x, y, speed):
+    def __init__(self, x, y, speed, high_score=0):
         super().__init__()
         self.speed = speed
         self.health = 1000
@@ -32,7 +32,7 @@ class Player(pygame.sprite.Sprite):
         self.direction = Vector2(1, 1)
         self.last_shot = time.time()
         self.score = 0
-        self.high_score = 0
+        self.high_score = high_score
 
     def update(self, dt):
         direction_to_mouse = Vector2(
@@ -92,7 +92,7 @@ class Player(pygame.sprite.Sprite):
                 if time.time() - self.last_shot < 0.2:
                     return
                 new_projectile = Projectile(
-                    self.rect.centerx, self.rect.centery, 200, self.direction, 25, 1
+                    self.rect.centerx, self.rect.centery, 200, self.direction, 30, 1
                 )
                 target.add(new_projectile)
                 self.last_shot = time.time()
@@ -100,12 +100,12 @@ class Player(pygame.sprite.Sprite):
                 if time.time() - self.last_shot < 0.1:
                     return
                 new_projectile = Projectile(
-                    self.rect.centerx, self.rect.centery, 100, self.direction, 10, 3
+                    self.rect.centerx, self.rect.centery, 100, self.direction, 15, 3
                 )
                 target.add(new_projectile)
                 self.last_shot = time.time()
             case Weapon.SHOTGUN:
-                if time.time() - self.last_shot < 3:
+                if time.time() - self.last_shot < 1:
                     return
                 for i in range(10):
                     new_projectile = Projectile(
@@ -113,7 +113,7 @@ class Player(pygame.sprite.Sprite):
                         self.rect.centery,
                         100,
                         self.direction,
-                        10,
+                        20,
                         20,
                         1,
                     )
@@ -215,7 +215,7 @@ class Enemy(pygame.sprite.Sprite):
                 target.add(new_projectile)
                 self.last_shot = time.time()
             case Weapon.SHOTGUN:
-                if time.time() - self.last_shot < 3:
+                if time.time() - self.last_shot < 2:
                     return
                 for i in range(10):
                     new_projectile = Projectile(
