@@ -32,6 +32,7 @@ class Player(pygame.sprite.Sprite):
         self.direction = Vector2(1, 1)
         self.last_shot = time.time()
         self.score = 0
+        self.high_score = 0
 
     def update(self, dt):
         direction_to_mouse = Vector2(
@@ -60,17 +61,17 @@ class Player(pygame.sprite.Sprite):
             self.rect.y += 1
 
     def border(self, width, height, dt):
-        if self.rect.x < 0:
-            self.rect.x += self.speed * dt
+        if self.rect.centerx < 0:
+            self.rect.centerx += self.speed * dt
             return True
-        if self.rect.x > width:
-            self.rect.x -= self.speed * dt
+        if self.rect.centerx > width:
+            self.rect.centerx -= self.speed * dt
             return True
-        if self.rect.y < 0:
-            self.rect.y += self.speed * dt
+        if self.rect.centery < 0:
+            self.rect.centery += self.speed * dt
             return True
-        if self.rect.y > height:
-            self.rect.y -= self.speed * dt
+        if self.rect.centery > height:
+            self.rect.centery -= self.speed * dt
             return True
         return False
 
@@ -91,7 +92,7 @@ class Player(pygame.sprite.Sprite):
                 if time.time() - self.last_shot < 0.2:
                     return
                 new_projectile = Projectile(
-                    self.rect.centerx, self.rect.centery, 100, self.direction, 25, 1
+                    self.rect.centerx, self.rect.centery, 200, self.direction, 25, 1
                 )
                 target.add(new_projectile)
                 self.last_shot = time.time()
@@ -201,7 +202,7 @@ class Enemy(pygame.sprite.Sprite):
                 if time.time() - self.last_shot < 1:
                     return
                 new_projectile = Projectile(
-                    self.rect.centerx, self.rect.centery, 100, self.direction, 10, 1
+                    self.rect.centerx, self.rect.centery, 200, self.direction, 5, 2
                 )
                 target.add(new_projectile)
                 self.last_shot = time.time()
@@ -209,7 +210,7 @@ class Enemy(pygame.sprite.Sprite):
                 if time.time() - self.last_shot < 0.1:
                     return
                 new_projectile = Projectile(
-                    self.rect.centerx, self.rect.centery, 100, self.direction, 5, 3
+                    self.rect.centerx, self.rect.centery, 100, self.direction, 2, 5
                 )
                 target.add(new_projectile)
                 self.last_shot = time.time()
@@ -222,8 +223,8 @@ class Enemy(pygame.sprite.Sprite):
                         self.rect.centery,
                         100,
                         self.direction,
-                        5,
-                        20,
+                        2,
+                        30,
                         1,
                     )
                     target.add(new_projectile)
@@ -282,7 +283,7 @@ class Projectile(pygame.sprite.Sprite):
 
 
 class WeaponDrop(pygame.sprite.Sprite):
-    def __init__(self, x, y, weapon: Weapon):
+    def __init__(self, x, y, weapon: Weapon, ttl: float):
         super().__init__()
         self.weapon = weapon
         self.rot_angle = 0
@@ -302,6 +303,8 @@ class WeaponDrop(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
         self.center = self.rect.center
+        self.ttl = ttl
+        self.time_spawned = time.time()
 
     def collision(self, player: Player):
         if self.rect.colliderect(player.rect):
@@ -313,16 +316,20 @@ class WeaponDrop(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(
             center=self.og_image.get_rect(center=self.center).center
         )
+        if time.time() - self.time_spawned > self.ttl:
+            self.kill()
         self.rot_angle += 0.5
         self.collision(player)
 
 
 class MedPack(pygame.sprite.Sprite):
-    def __init__(self, x, y):
+    def __init__(self, x, y, ttl):
         super().__init__()
         self.image = pygame.image.load("img/HP.png")
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
+        self.ttl = ttl
+        self.time_spawned = time.time()
 
     def collision(self, player: Player):
         if self.rect.colliderect(player.rect):
@@ -330,4 +337,6 @@ class MedPack(pygame.sprite.Sprite):
             self.kill()
 
     def update(self, player: Player):
+        if time.time() - self.time_spawned > self.ttl:
+            self.kill()
         self.collision(player)
