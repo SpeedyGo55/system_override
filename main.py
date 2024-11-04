@@ -1,7 +1,9 @@
 import json
 import time
+from operator import contains
 from random import uniform, choice, random
-
+import requests
+from urllib import parse
 import pygame_textinput
 import pygame
 
@@ -16,7 +18,15 @@ pixelify_sans = pygame.font.Font("Fonts/PixelifySans.ttf", 32)
 score_font = pygame.font.Font("Fonts/PixelifySans.ttf", 24)
 clock = pygame.time.Clock()
 name = ""
-config = json.load(open("config.json", "r"))
+started = False
+name_input = pygame_textinput.TextInputVisualizer()
+leader_board = False
+last_response = 0
+
+CONFIG = json.load(open("config.json", "r"))
+LB_SECRET = CONFIG["LEADERBOARD_SECRET"]
+LB_PUBLIC = CONFIG["LEADERBOARD_PUBLIC"]
+LB_URL = CONFIG["LEADERBOARD_URL"]
 
 
 def spawn_random_enemy():
@@ -37,10 +47,64 @@ def spawn_random_med_pack():
     new_med_pack = MedPack(uniform(0, WIDTH), uniform(0, HEIGHT), 10)
     med_packs.add(new_med_pack)
 
+
+def add_user(name, score):
+    global LB_SECRET, LB_URL
+    url = f"{LB_URL}{LB_SECRET}/add/{parse.quote_plus(name)}/{score}"
+    requests.get(url)
+
+
+def get_top_users(top_n):
+    global LB_PUBLIC, LB_URL
+    url = f"{LB_URL}{LB_PUBLIC}/json/{top_n}"
+    response = requests.get(url)
+    print(response.text)
+    result = json.loads(response.text)
+    return result
+
+
 def leader_board_screen():
+    global screen, pixelify_sans, running, leader_board, last_response
+    if time.time() - last_response <= 60 * 5:
+        return
+    screen.fill(GREEN)
+    back_text = pixelify_sans.render(
+        "Back",
+        True,
+        (0, 0, 0),
+    )
+    back_rect = back_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 300))
+
+    top_users = get_top_users(10)["dreamlo"]["leaderboard"]["entry"]
+
+    y = 0
+    for user in top_users:
+        user_text = pixelify_sans.render(
+            f"{parse.unquote_plus(user['name'])} - {user['score']}",
+            True,
+            (0, 0, 0),
+        )
+        user_rect = user_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 100 + y))
+        screen.blit(user_text, user_rect)
+        y += 50
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT or (
+            event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE
+        ):
+            running = False
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            mouse_x, mouse_y = pygame.mouse.get_pos()
+            if back_rect.collidepoint(mouse_x, mouse_y):
+                leader_board = False
+
+    screen.blit(back_text, back_rect)
+    last_response = time.time()
+    pygame.display.flip()
+
 
 def start_screen():
-    global screen, pixelify_sans, running, name
+    global screen, pixelify_sans, running, name, started, name_input, leader_board
     screen.fill(GREEN)
     events = pygame.event.get()
     title_text = pixelify_sans.render(
@@ -50,7 +114,7 @@ def start_screen():
     )
     title_rect = title_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 100))
 
-    name_input = pygame_textinput.TextInputVisualizer()
+    name_input_rect = name_input.surface.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 50))
 
     start_text = pixelify_sans.render("Start", True, (0, 0, 0))
     start_rect = start_text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
@@ -71,11 +135,20 @@ def start_screen():
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             mouse_x, mouse_y = pygame.mouse.get_pos()
             if start_rect.collidepoint(mouse_x, mouse_y):
-                return name_input.value()
+                started = True
+                return name_input.value
             elif quit_rect.collidepoint(mouse_x, mouse_y):
                 running = False
+                return name_input.value
             elif leader_board_rect.collidepoint(mouse_x, mouse_y):
-                leader_board_screen()
+                leader_board = True
+                return name_input.value
+
+    screen.blit(title_text, title_rect)
+    screen.blit(name_input.surface, name_input_rect)
+    screen.blit(start_text, start_rect)
+    screen.blit(quit_text, quit_rect)
+    screen.blit(leader_board_text, leader_board_rect)
 
     pygame.display.flip()
 
@@ -159,7 +232,7 @@ def death_screen():
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT or (
-                event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE
+            event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE
         ):
             running = False
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -177,6 +250,8 @@ def death_screen():
     if player.score > player.high_score:
         player.high_score = player.score
 
+    add_user(name, player.score)
+
     screen.blit(quit_text, quit_rect)
     screen.blit(again_text, again_rect)
 
@@ -189,19 +264,19 @@ weapon_drops = pygame.sprite.Group()
 med_packs = pygame.sprite.Group()
 machine_gun = False
 running = True
-started = False
 dt = clock.tick(FPS) / 1000
 last_shot = time.time()
 
 while running:
-    if started == False:
+    if not started and not leader_board:
         name = start_screen()
-        started = True
+    elif leader_board:
+        leader_board_screen()
+    elif player.health > 0 and started:
+        play_screen()
     if player.health <= 0:
         death_screen()
     # Events
-    if player.health > 0:
-        play_screen()
 
     pygame.display.flip()
     dt = clock.tick(FPS) / 1000
