@@ -21,7 +21,7 @@ class Player(pygame.sprite.Sprite):
     def __init__(self, x, y, speed, high_score=0):
         super().__init__()
         self.speed = speed
-        self.health = 1000
+        self.health = 500
         self.weapon = Weapon.PISTOL
         self.og_image = pygame.image.load("img/MCHG.png")
         self.change_weapon(choice(list(Weapon)))
