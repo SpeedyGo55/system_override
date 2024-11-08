@@ -17,7 +17,7 @@ from screens import (
     add_user,
     get_top_users,
     score_font,
-    pixelify_sans,
+    game_font,
 )
 
 pygame.init()
@@ -26,7 +26,7 @@ pygame.display.set_caption("System Override")
 clock = pygame.time.Clock()
 name = ""
 started = False
-name_input = pygame_textinput.TextInputVisualizer()
+name_input = pygame_textinput.TextInputVisualizer(font_object=game_font)
 leader_board = False
 last_response = 0
 
@@ -132,7 +132,7 @@ def play_screen():
 while running:
     if not started and not leader_board:
         player.name, started, leader_board, running = start_screen(
-            screen, pixelify_sans, name_input, started, leader_board
+            screen, game_font, name_input, started, leader_board
         )
     elif leader_board:
         last_response, leader_board = leader_board_screen(
@@ -143,8 +143,13 @@ while running:
     elif player.health > 0 and started:
         play_screen()
     if player.health <= 0 and not leader_board:
+        enemies.empty()
+        player_projectiles.empty()
+        enemy_projectiles.empty()
+        weapon_drops.empty()
+        med_packs.empty()
         player, running, leader_board, started = death_screen(
-            screen, pixelify_sans, player, running
+            screen, game_font, player, running
         )
     # Events
 

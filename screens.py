@@ -10,8 +10,8 @@ from config import WIDTH, HEIGHT
 from constants import GREEN
 from classes import Player
 
-pixelify_sans = pygame.font.Font("Fonts/PixelifySans.ttf", 32)
-score_font = pygame.font.Font("Fonts/PixelifySans.ttf", 24)
+game_font = pygame.font.Font("Fonts/game_over.ttf", 86)
+score_font = pygame.font.Font("Fonts/game_over.ttf", 64)
 CONFIG = json.load(open("config.json", "r"))
 LB_SECRET = CONFIG["LEADERBOARD_SECRET"]
 LB_PUBLIC = CONFIG["LEADERBOARD_PUBLIC"]
@@ -19,7 +19,7 @@ LB_URL = CONFIG["LEADERBOARD_URL"]
 
 
 def leader_board_screen(screen, last_response, leader_board):
-    back_text = pixelify_sans.render(
+    back_text = game_font.render(
         "Back",
         True,
         (0, 0, 0),
@@ -44,7 +44,7 @@ def leader_board_screen(screen, last_response, leader_board):
     screen.fill(GREEN)
     y = 0
     for user in top_users:
-        user_text = pixelify_sans.render(
+        user_text = game_font.render(
             f"{parse.unquote_plus(user['name'])} - {user['score']}",
             True,
             (0, 0, 0),
@@ -109,6 +109,10 @@ def start_screen(screen, pixelify_sans, name_input, started, leader_board):
 
 def death_screen(screen, pixelify_sans, player, running):
     screen.fill(GREEN)
+
+    died_text = pixelify_sans.render("You Died", True, (255, 0, 0))
+    died_rect = died_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 150))
+
     again_text = pixelify_sans.render("Try Again", True, (0, 0, 0))
     again_rect = again_text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
     quit_text = pixelify_sans.render("Quit", True, (0, 0, 0))
@@ -124,7 +128,9 @@ def death_screen(screen, pixelify_sans, player, running):
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             mouse_x, mouse_y = pygame.mouse.get_pos()
             if again_rect.collidepoint(mouse_x, mouse_y):
-                player = Player(WIDTH // 2, HEIGHT // 2, 100, player.high_score)
+                player = Player(
+                    WIDTH // 2, HEIGHT // 2, 100, player.high_score, player.name
+                )
                 return player, True, False, True
             elif quit_rect.collidepoint(mouse_x, mouse_y):
                 return player, False, False, False
@@ -143,6 +149,7 @@ def death_screen(screen, pixelify_sans, player, running):
     )
     high_score_rect = high_score_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 50))
 
+    screen.blit(died_text, died_rect)
     screen.blit(score_text, score_rect)
     screen.blit(high_score_text, high_score_rect)
     screen.blit(leaderboard_text, leaderboard_rect)
