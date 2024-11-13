@@ -1,25 +1,18 @@
-import json
 import time
-from operator import contains
-from random import uniform, choice, random
-import requests
-from urllib import parse
+from random import random
 import pygame_textinput
 import pygame
 
-from classes import Player, Enemy, WeaponDrop, Weapon, MedPack
+from classes import Player, Weapon
 from config import WIDTH, HEIGHT, FPS
-from constants import GREEN
 from screens import (
     leader_board_screen,
     start_screen,
     death_screen,
-    add_user,
-    get_top_users,
     score_font,
     game_font,
 )
-from tools import map_val
+from tools import map_val, spawn_random_enemy, spawn_random_weapon_drop, spawn_random_med_pack
 
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
@@ -44,25 +37,6 @@ running = True
 dt = clock.tick(FPS) / 1000
 last_shot = time.time()
 just_pressed = False
-
-
-def spawn_random_enemy():
-    new_enemy = Enemy(
-        uniform(0, WIDTH), uniform(0, HEIGHT), 50 + (5 * uniform(-3, 3)), 100, 100
-    )
-    enemies.add(new_enemy)
-
-
-def spawn_random_weapon_drop():
-    new_weapon_drop = WeaponDrop(
-        uniform(0, WIDTH), uniform(0, HEIGHT), choice(list(Weapon)), 10
-    )
-    weapon_drops.add(new_weapon_drop)
-
-
-def spawn_random_med_pack():
-    new_med_pack = MedPack(uniform(0, WIDTH), uniform(0, HEIGHT), 10)
-    med_packs.add(new_med_pack)
 
 
 def play_screen():
@@ -92,13 +66,13 @@ def play_screen():
 
     # random enemy spawn. more likely to spawn if player has a higher score. therefore more spawn if player has a higher score
     if random() < player.score / 1000 + 0.01:
-        spawn_random_enemy()
+        spawn_random_enemy(WIDTH, HEIGHT)
     # random weapon drop spawn
     if random() < 0.001:
-        spawn_random_weapon_drop()
+        spawn_random_weapon_drop(WIDTH, HEIGHT)
     # random med pack spawn
     if random() < 0.0005:
-        spawn_random_med_pack()
+        spawn_random_med_pack(WIDTH, HEIGHT)
     # Update
     if machine_gun and time.time() - last_shot > 0.025:
         player.shoot(player_projectiles)
