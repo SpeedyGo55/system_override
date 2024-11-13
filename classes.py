@@ -22,6 +22,7 @@ class Player(pygame.sprite.Sprite):
         super().__init__()
         self.speed = speed
         self.health = 500
+        self.max_health = 500
         self.weapon = Weapon.PISTOL
         self.og_image = pygame.image.load("img/MCHG.png")
         self.change_weapon(choice(list(Weapon)))
@@ -34,6 +35,12 @@ class Player(pygame.sprite.Sprite):
         self.score = 0
         self.high_score = high_score
         self.name = name
+        self.healthbar_red = pygame.image.load("img/HBR.png")
+        self.healthbar_red = pygame.transform.scale(self.healthbar_red, (32 * 7, 7 * 7))
+        self.healthbar_black = pygame.image.load("img/HBB.png")
+        self.healthbar_black = pygame.transform.scale(
+            self.healthbar_black, (32 * 7, 7 * 7)
+        )
 
     def update(self, dt):
         direction_to_mouse = Vector2(
@@ -368,7 +375,9 @@ class MedPack(pygame.sprite.Sprite):
 
     def collision(self, player: Player):
         if self.rect.colliderect(player.rect):
-            player.health = min(1000, player.health + 500)
+            player.health = min(
+                player.max_health, round(player.health + (player.max_health / 2))
+            )
             self.kill()
 
     def update(self, player: Player):
