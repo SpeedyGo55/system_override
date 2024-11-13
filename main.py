@@ -117,7 +117,7 @@ def play_screen():
     mapped_health = int(map_val(player.health, 0, player.max_health, 0, 100))
 
     health_text = score_font.render(f"{mapped_health}", True, (0, 255, 0))
-    health_rect = health_text.get_rect(topleft=(20 + (32 - 8) * 7, HEIGHT - 7 * 7))
+    health_rect = health_text.get_rect(topleft=(20 + (32 - 8) * 7 + 7, HEIGHT - 7 * 7))
 
     player.update(dt)
     enemies.update(player, enemies, enemy_projectiles, dt)
