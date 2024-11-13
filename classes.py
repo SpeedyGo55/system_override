@@ -11,9 +11,8 @@ from config import WIDTH, HEIGHT
 
 pygame.mixer.init()
 
-SG_Shot = pygame.mixer.Sound("audio/Shotgun.mp3")
-MG_Shot = pygame.mixer.Sound("audio/Machine_Gun.mp3")
-HG_Shot = pygame.mixer.Sound("audio/Handgun.mp3")
+enemy_hit = pygame.mixer.Sound("audio/EnemyHit.wav")
+player_hit = pygame.mixer.Sound("audio/PlayerHit.wav")
 
 
 class Weapon(Enum):
@@ -111,13 +110,13 @@ class Player(pygame.sprite.Sprite):
             case Weapon.PISTOL:
                 if time.time() - self.last_shot < 0.2:
                     return
-                HG_Shot.play()
                 new_projectile = Projectile(
                     self.rect.centerx + hg_offset.x,
                     self.rect.centery + hg_offset.y,
                     200,
                     self.direction,
                     30,
+                    enemy_hit,
                     1,
                 )
                 target.add(new_projectile)
@@ -125,13 +124,13 @@ class Player(pygame.sprite.Sprite):
             case Weapon.MACHINE_GUN:
                 if time.time() - self.last_shot < 0.1:
                     return
-                MG_Shot.play()
                 new_projectile = Projectile(
                     self.rect.centerx + offset.x,
                     self.rect.centery + offset.y,
                     100,
                     self.direction,
                     15,
+                    enemy_hit,
                     3,
                 )
                 target.add(new_projectile)
@@ -139,7 +138,6 @@ class Player(pygame.sprite.Sprite):
             case Weapon.SHOTGUN:
                 if time.time() - self.last_shot < 1:
                     return
-                SG_Shot.play()
                 for i in range(10):
                     new_projectile = Projectile(
                         self.rect.centerx + offset.x,
@@ -147,6 +145,7 @@ class Player(pygame.sprite.Sprite):
                         100,
                         self.direction,
                         20,
+                        enemy_hit,
                         20,
                         1,
                     )
@@ -253,13 +252,13 @@ class Enemy(pygame.sprite.Sprite):
             case Weapon.PISTOL:
                 if time.time() - self.last_shot < 1:
                     return
-                HG_Shot.play()
                 new_projectile = Projectile(
                     self.rect.centerx + hg_offset.x,
                     self.rect.centery + hg_offset.y,
                     200,
                     self.direction,
                     5,
+                    player_hit,
                     2,
                 )
                 target.add(new_projectile)
@@ -267,13 +266,13 @@ class Enemy(pygame.sprite.Sprite):
             case Weapon.MACHINE_GUN:
                 if time.time() - self.last_shot < 0.1:
                     return
-                MG_Shot.play()
                 new_projectile = Projectile(
                     self.rect.centerx + offset.x,
                     self.rect.centery + offset.y,
                     100,
                     self.direction,
                     2,
+                    player_hit,
                     5,
                 )
                 target.add(new_projectile)
@@ -281,7 +280,6 @@ class Enemy(pygame.sprite.Sprite):
             case Weapon.SHOTGUN:
                 if time.time() - self.last_shot < 2:
                     return
-                SG_Shot.play()
                 for i in range(10):
                     new_projectile = Projectile(
                         self.rect.centerx + offset.x,
@@ -289,6 +287,7 @@ class Enemy(pygame.sprite.Sprite):
                         100,
                         self.direction,
                         2,
+                        player_hit,
                         30,
                         1,
                     )
@@ -304,6 +303,7 @@ class Projectile(pygame.sprite.Sprite):
         speed: int,
         direction: Vector2,
         damage: int,
+        hit_sound: pygame.mixer.Sound = enemy_hit,
         accuracy: float = 0,
         lifetime: float = INFINITY,
     ):
@@ -312,6 +312,7 @@ class Projectile(pygame.sprite.Sprite):
             direction = Vector2(1, 0)
         self.speed = speed
         self.damage = damage
+        self.hit_sound = hit_sound
         self.image: pygame.image = pygame.image.load("img/Bullet.png")
         self.rect: pygame.rect = self.image.get_rect()
         self.rect.center = (x, y)
@@ -327,6 +328,7 @@ class Projectile(pygame.sprite.Sprite):
             ) ** 0.5
             if distance < enemy.size:
                 enemy.health -= self.damage
+                self.hit_sound.play()
                 self.kill()
                 return
             if (

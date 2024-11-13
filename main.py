@@ -19,6 +19,10 @@ from tools import (
     spawn_random_med_pack,
 )
 
+
+pygame.mixer.pre_init(44100, -16, 2, 2048)
+pygame.mixer.init()
+
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
 pygame.display.set_caption("System Override")
@@ -31,7 +35,6 @@ last_response = 0
 background = pygame.image.load("img/Background.png")
 background = pygame.transform.scale(background, (WIDTH, HEIGHT))
 
-pygame.mixer.init()
 pygame.mixer.music.load("audio/BackgroundMusic.wav")
 pygame.mixer.music.set_volume(0.05)
 pygame.mixer.music.play(-1)
