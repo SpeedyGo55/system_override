@@ -164,7 +164,6 @@ def get_top_users(top_n):
     global LB_PUBLIC, LB_URL
     url = f"{LB_URL}{LB_PUBLIC}/json/{top_n}"
     response = requests.get(url)
-    print(response.text)
     result = json.loads(response.text)
     return result
 
