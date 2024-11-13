@@ -31,6 +31,11 @@ last_response = 0
 background = pygame.image.load("img/Background.png")
 background = pygame.transform.scale(background, (WIDTH, HEIGHT))
 
+pygame.mixer.init()
+pygame.mixer.music.load("audio/BackgroundMusic.wav")
+pygame.mixer.music.set_volume(0.05)
+pygame.mixer.music.play(-1)
+
 player = Player(WIDTH // 2, HEIGHT // 2, 100)
 enemies = pygame.sprite.Group()
 player_projectiles = pygame.sprite.Group()
@@ -71,13 +76,13 @@ def play_screen():
 
     # random enemy spawn. more likely to spawn if player has a higher score. therefore more spawn if player has a higher score
     if random() < player.score / 1000 + 0.01:
-        spawn_random_enemy(WIDTH, HEIGHT)
+        spawn_random_enemy(WIDTH, HEIGHT, enemies)
     # random weapon drop spawn
     if random() < 0.001:
-        spawn_random_weapon_drop(WIDTH, HEIGHT)
+        spawn_random_weapon_drop(WIDTH, HEIGHT, weapon_drops)
     # random med pack spawn
     if random() < 0.0005:
-        spawn_random_med_pack(WIDTH, HEIGHT)
+        spawn_random_med_pack(WIDTH, HEIGHT, med_packs)
     # Update
     if machine_gun and time.time() - last_shot > 0.025:
         player.shoot(player_projectiles)

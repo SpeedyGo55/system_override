@@ -5,6 +5,9 @@ import time
 from urllib import parse
 
 import requests
+from pygame import SurfaceType
+from pygame.font import FontType
+from pygame_textinput import TextInputVisualizer
 
 from config import WIDTH, HEIGHT
 from constants import GREEN
@@ -18,7 +21,7 @@ LB_PUBLIC = CONFIG["LEADERBOARD_PUBLIC"]
 LB_URL = CONFIG["LEADERBOARD_URL"]
 
 
-def leader_board_screen(screen, last_response, leader_board):
+def leader_board_screen(screen: SurfaceType, last_response: float, leader_board: bool):
     back_text = game_font.render(
         "Back",
         True,
@@ -40,7 +43,6 @@ def leader_board_screen(screen, last_response, leader_board):
         return last_response, leader_board
 
     top_users = get_top_users(5)["dreamlo"]["leaderboard"]["entry"]
-    print(top_users)
     screen.fill(GREEN)
     y = 0
     for user in top_users:
@@ -60,7 +62,14 @@ def leader_board_screen(screen, last_response, leader_board):
     return last_response, leader_board
 
 
-def start_screen(screen, pixelify_sans, name_input, started, leader_board):
+# noinspection DuplicatedCode
+def start_screen(
+    screen: SurfaceType,
+    pixelify_sans: FontType,
+    name_input: TextInputVisualizer,
+    started: bool,
+    leader_board: bool,
+):
     screen.fill(GREEN)
     events = pygame.event.get()
     title_text = pixelify_sans.render(
@@ -95,6 +104,7 @@ def start_screen(screen, pixelify_sans, name_input, started, leader_board):
             elif leader_board_rect.collidepoint(mouse_x, mouse_y):
                 return name_input.value, started, True, True
 
+    # noinspection PyTypeChecker
     name_input.update(events)
 
     screen.blit(title_text, title_rect)
@@ -107,7 +117,10 @@ def start_screen(screen, pixelify_sans, name_input, started, leader_board):
     return name_input.value, started, leader_board, True
 
 
-def death_screen(screen, pixelify_sans, player, running):
+# noinspection DuplicatedCode
+def death_screen(
+    screen: SurfaceType, pixelify_sans: FontType, player: Player, running: bool
+):
     screen.fill(GREEN)
 
     died_text = pixelify_sans.render("You Died", True, (255, 0, 0))
@@ -117,8 +130,10 @@ def death_screen(screen, pixelify_sans, player, running):
     again_rect = again_text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
     quit_text = pixelify_sans.render("Quit", True, (0, 0, 0))
     quit_rect = quit_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 50))
-    leaderboard_text = pixelify_sans.render("Leader Board", True, (0, 0, 0))
-    leaderboard_rect = leaderboard_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 100))
+    leader_board_text = pixelify_sans.render("Leader Board", True, (0, 0, 0))
+    leader_board_rect = leader_board_text.get_rect(
+        center=(WIDTH // 2, HEIGHT // 2 + 100)
+    )
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT or (
@@ -134,7 +149,7 @@ def death_screen(screen, pixelify_sans, player, running):
                 return player, True, False, True
             elif quit_rect.collidepoint(mouse_x, mouse_y):
                 return player, False, False, False
-            elif leaderboard_rect.collidepoint(mouse_x, mouse_y):
+            elif leader_board_rect.collidepoint(mouse_x, mouse_y):
                 return player, True, True, False
 
     if player.score > player.high_score:
@@ -152,7 +167,7 @@ def death_screen(screen, pixelify_sans, player, running):
     screen.blit(died_text, died_rect)
     screen.blit(score_text, score_rect)
     screen.blit(high_score_text, high_score_rect)
-    screen.blit(leaderboard_text, leaderboard_rect)
+    screen.blit(leader_board_text, leader_board_rect)
     screen.blit(quit_text, quit_rect)
     screen.blit(again_text, again_rect)
 
@@ -160,7 +175,7 @@ def death_screen(screen, pixelify_sans, player, running):
     return player, running, False, True
 
 
-def get_top_users(top_n):
+def get_top_users(top_n: int):
     global LB_PUBLIC, LB_URL
     url = f"{LB_URL}{LB_PUBLIC}/json/{top_n}"
     response = requests.get(url)
@@ -168,7 +183,7 @@ def get_top_users(top_n):
     return result
 
 
-def add_user(name, score):
+def add_user(name: str, score: int):
     global LB_SECRET, LB_URL
     url = f"{LB_URL}{LB_SECRET}/add/{parse.quote_plus(name)}/{score}"
     requests.get(url)
