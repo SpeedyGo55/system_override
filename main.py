@@ -12,7 +12,12 @@ from screens import (
     score_font,
     game_font,
 )
-from tools import map_val, spawn_random_enemy, spawn_random_weapon_drop, spawn_random_med_pack
+from tools import (
+    map_val,
+    spawn_random_enemy,
+    spawn_random_weapon_drop,
+    spawn_random_med_pack,
+)
 
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
