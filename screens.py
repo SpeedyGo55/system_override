@@ -9,11 +9,11 @@ from pygame import SurfaceType
 from pygame_textinput import TextInputVisualizer
 
 from config import WIDTH, HEIGHT
-from constants import GREEN
 from classes import Player
 
 game_font = pygame.font.Font("Fonts/game_over.ttf", 86)
 big_game_font = pygame.font.Font("Fonts/game_over.ttf", 96)
+you_died_font = pygame.font.Font("Fonts/game_over.ttf", 128)
 score_font = pygame.font.Font("Fonts/game_over.ttf", 64)
 CONFIG = json.load(open("config.json", "r"))
 LB_SECRET = CONFIG["LEADERBOARD_SECRET"]
@@ -21,15 +21,21 @@ LB_PUBLIC = CONFIG["LEADERBOARD_PUBLIC"]
 LB_URL = CONFIG["LEADERBOARD_URL"]
 
 added_user = False
+menu_bg = pygame.image.load("img/Menu.png")
+menu_bg = pygame.transform.scale(menu_bg, (WIDTH, HEIGHT))
+death_bg = pygame.image.load("img/DEATH.png")
+death_bg = pygame.transform.scale(death_bg, (WIDTH, HEIGHT))
+lb_bg = pygame.image.load("img/LB.png")
+lb_bg = pygame.transform.scale(lb_bg, (WIDTH, HEIGHT))
 
 
 def leader_board_screen(screen: SurfaceType, last_response: float, leader_board: bool):
     back_text = game_font.render(
         "Back",
         True,
-        (0, 0, 0),
+        (0, 255, 255),
     )
-    back_rect = back_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 250))
+    back_rect = back_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 190))
     for event in pygame.event.get():
         if event.type == pygame.QUIT or (
             event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE
@@ -42,28 +48,28 @@ def leader_board_screen(screen: SurfaceType, last_response: float, leader_board:
 
     mouse_x, mouse_y = pygame.mouse.get_pos()
     if back_rect.collidepoint(mouse_x, mouse_y):
-        back_text = big_game_font.render("Back", True, (0, 0, 0))
-        back_rect = back_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 250))
+        back_text = big_game_font.render("Back", True, (0, 255, 255))
+        back_rect = back_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 190))
 
     if time.time() - last_response <= 60 * 5:
-        screen.fill(GREEN, back_rect.scale_by(1.5))
+        screen.blit(lb_bg, back_rect.scale_by(1.1).topleft, back_rect.scale_by(1.1))
         screen.blit(back_text, back_rect)
         pygame.display.flip()
         return last_response, leader_board
 
     top_users = get_top_users(5)["dreamlo"]["leaderboard"]["entry"]
-    screen.fill(GREEN)
+    screen.blit(lb_bg, (0, 0))
     y = 0
     for user in top_users:
         user_text = game_font.render(
             f"{parse.unquote_plus(user['name'])} - {user['score']}",
             True,
-            (0, 0, 0),
+            (0, 255, 255),
         )
         user_rect = user_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 100 + y))
         screen.blit(user_text, user_rect)
         pygame.display.flip()
-        y += 50
+        y += 53
 
     screen.blit(back_text, back_rect)
     last_response = time.time()
@@ -78,7 +84,7 @@ def start_screen(
     started: bool,
     leader_board: bool,
 ):
-    screen.fill(GREEN)
+    screen.blit(menu_bg, (0, 0))
     events = pygame.event.get()
     title_text = game_font.render(
         "System Override",
@@ -140,18 +146,18 @@ def start_screen(
 # noinspection DuplicatedCode
 def death_screen(screen: SurfaceType, player: Player, running: bool):
     global added_user
-    screen.fill(GREEN)
+    screen.blit(death_bg, (0, 0))
 
-    died_text = game_font.render("You Died", True, (255, 0, 0))
+    died_text = you_died_font.render("You Died", True, (255, 0, 0))
     died_rect = died_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 150))
 
-    again_text = game_font.render("Try Again", True, (0, 0, 0))
-    again_rect = again_text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
-    quit_text = game_font.render("Quit", True, (0, 0, 0))
-    quit_rect = quit_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 50))
-    leader_board_text = game_font.render("Leader Board", True, (0, 0, 0))
+    again_text = game_font.render("Try Again", True, (0, 255, 0))
+    again_rect = again_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 50))
+    quit_text = game_font.render("Quit", True, (0, 255, 0))
+    quit_rect = quit_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 100))
+    leader_board_text = game_font.render("Leader Board", True, (0, 255, 0))
     leader_board_rect = leader_board_text.get_rect(
-        center=(WIDTH // 2, HEIGHT // 2 + 100)
+        center=(WIDTH // 2, HEIGHT // 2 + 150)
     )
 
     for event in pygame.event.get():
@@ -174,15 +180,15 @@ def death_screen(screen: SurfaceType, player: Player, running: bool):
 
     mouse_x, mouse_y = pygame.mouse.get_pos()
     if again_rect.collidepoint(mouse_x, mouse_y):
-        again_text = big_game_font.render("Try Again", True, (0, 0, 0))
-        again_rect = again_text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+        again_text = big_game_font.render("Try Again", True, (0, 255, 0))
+        again_rect = again_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 50))
     if quit_rect.collidepoint(mouse_x, mouse_y):
-        quit_text = big_game_font.render("Quit", True, (0, 0, 0))
-        quit_rect = quit_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 50))
+        quit_text = big_game_font.render("Quit", True, (0, 255, 0))
+        quit_rect = quit_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 100))
     if leader_board_rect.collidepoint(mouse_x, mouse_y):
-        leader_board_text = big_game_font.render("Leader Board", True, (0, 0, 0))
+        leader_board_text = big_game_font.render("Leader Board", True, (0, 255, 0))
         leader_board_rect = leader_board_text.get_rect(
-            center=(WIDTH // 2, HEIGHT // 2 + 100)
+            center=(WIDTH // 2, HEIGHT // 2 + 150)
         )
 
     if player.score > player.high_score:
@@ -191,12 +197,14 @@ def death_screen(screen: SurfaceType, player: Player, running: bool):
         add_user(player.name, player.score)
         added_user = True
 
-    score_text = score_font.render(f"Score: {player.score}", True, (0, 0, 0))
-    score_rect = score_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 100))
+    score_text = score_font.render(f"Score: {player.score}", True, (0, 255, 0))
+    score_rect = score_text.get_rect(center=(WIDTH // 2 - 210, HEIGHT // 2 - 50))
     high_score_text = score_font.render(
-        f"High Score: {player.high_score}", True, (0, 0, 0)
+        f"High Score: {player.high_score}", True, (0, 255, 0)
     )
-    high_score_rect = high_score_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 50))
+    high_score_rect = high_score_text.get_rect(
+        center=(WIDTH // 2 + 210, HEIGHT // 2 - 50)
+    )
 
     screen.blit(died_text, died_rect)
     screen.blit(score_text, score_rect)

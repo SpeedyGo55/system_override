@@ -74,7 +74,7 @@ def play_screen():
             machine_gun = False
             just_pressed = True
 
-    # random enemy spawn. more likely to spawn if player has a higher score. therefore more spawn if player has a higher score
+    # random enemy spawn. more likely to spawn if player has a higher score.
     if random() < player.score / 1000 + 0.01:
         spawn_random_enemy(WIDTH, HEIGHT, enemies)
     # random weapon drop spawn

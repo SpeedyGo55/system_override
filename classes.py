@@ -9,7 +9,8 @@ from pygame.sprite import Group
 
 from config import WIDTH, HEIGHT
 
-pygame.mixer.init(channels=16)
+pygame.mixer.pre_init(44100, -16, 16, 64)
+pygame.mixer.init()
 
 enemy_hit = pygame.mixer.Sound("audio/Hitmarker.mp3")
 enemy_hit.set_volume(0.1)
@@ -26,7 +27,7 @@ class Weapon(Enum):
 # noinspection PyTypeChecker
 class Player(pygame.sprite.Sprite):
     def __init__(
-        self, x: float, y: float, speed: int, high_score: int = 0, name: str = ""
+        self, x: float, y: float, speed: int, high_score: int = 100, name: str = ""
     ):
         super().__init__()
         self.speed = speed
