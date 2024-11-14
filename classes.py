@@ -9,7 +9,7 @@ from pygame.sprite import Group
 
 from config import WIDTH, HEIGHT
 
-pygame.mixer.init()
+pygame.mixer.init(channels=16)
 
 enemy_hit = pygame.mixer.Sound("audio/Hitmarker.mp3")
 enemy_hit.set_volume(0.1)

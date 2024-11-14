@@ -50,13 +50,13 @@ just_pressed = False
 
 
 def play_screen():
-    global running, machine_gun, last_shot, just_pressed
+    global running, machine_gun, last_shot, just_pressed, started
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT or (
             event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE
         ):
-            running = False
+            started = False
         if (
             event.type == pygame.MOUSEBUTTONDOWN
             and pygame.mouse.get_pressed(3)[0] == True
@@ -133,7 +133,7 @@ def play_screen():
 while running:
     if not started and not leader_board:
         player.name, started, leader_board, running = start_screen(
-            screen, game_font, name_input, started, leader_board
+            screen, name_input, started, leader_board
         )
     elif leader_board:
         last_response, leader_board = leader_board_screen(
@@ -154,9 +154,7 @@ while running:
         enemy_projectiles.empty()
         weapon_drops.empty()
         med_packs.empty()
-        player, running, leader_board, started = death_screen(
-            screen, game_font, player, running
-        )
+        player, running, leader_board, started = death_screen(screen, player, running)
     # Events
 
     pygame.display.flip()
