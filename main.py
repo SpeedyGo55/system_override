@@ -3,7 +3,7 @@ from random import random
 import pygame_textinput
 import pygame
 
-from classes import Player, Weapon
+from classes import Player, Weapon, player_death
 from config import WIDTH, HEIGHT, FPS
 from screens import (
     leader_board_screen,
@@ -18,10 +18,6 @@ from tools import (
     spawn_random_weapon_drop,
     spawn_random_med_pack,
 )
-
-
-pygame.mixer.pre_init(44100, -16, 2, 2048)
-pygame.mixer.init()
 
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
@@ -40,6 +36,7 @@ pygame.mixer.music.set_volume(0.05)
 pygame.mixer.music.play(-1)
 
 player = Player(WIDTH // 2, HEIGHT // 2, 100)
+just_died = False
 enemies = pygame.sprite.Group()
 player_projectiles = pygame.sprite.Group()
 enemy_projectiles = pygame.sprite.Group()
@@ -145,8 +142,13 @@ while running:
         if not leader_board:
             last_response = 0
     elif player.health > 0 and started:
+        if not just_died:
+            just_died = True
         play_screen()
     if player.health <= 0 and not leader_board:
+        if just_died:
+            player_death.play()
+            just_died = False
         enemies.empty()
         player_projectiles.empty()
         enemy_projectiles.empty()

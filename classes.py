@@ -11,8 +11,10 @@ from config import WIDTH, HEIGHT
 
 pygame.mixer.init()
 
-enemy_hit = pygame.mixer.Sound("audio/EnemyHit.wav")
-player_hit = pygame.mixer.Sound("audio/PlayerHit.wav")
+enemy_hit = pygame.mixer.Sound("audio/Hitmarker.mp3")
+enemy_hit.set_volume(0.1)
+
+player_death = pygame.mixer.Sound("audio/Player_Death.mp3")
 
 
 class Weapon(Enum):
@@ -60,7 +62,7 @@ class Player(pygame.sprite.Sprite):
         angle = self.direction.angle_to(Vector2(1, 0))
         self.image = pygame.transform.rotate(self.og_image, angle + 90)
         self.rect = self.image.get_rect(center=self.rect.center)
-        if self.health <= 0:
+        if self.health <= 0 and not self.dead:
             self.kill()
             return
         if self.border(WIDTH, HEIGHT, dt):
@@ -258,7 +260,7 @@ class Enemy(pygame.sprite.Sprite):
                     200,
                     self.direction,
                     5,
-                    player_hit,
+                    None,
                     2,
                 )
                 target.add(new_projectile)
@@ -272,7 +274,7 @@ class Enemy(pygame.sprite.Sprite):
                     100,
                     self.direction,
                     2,
-                    player_hit,
+                    None,
                     5,
                 )
                 target.add(new_projectile)
@@ -287,7 +289,7 @@ class Enemy(pygame.sprite.Sprite):
                         100,
                         self.direction,
                         2,
-                        player_hit,
+                        None,
                         30,
                         1,
                     )
@@ -303,7 +305,7 @@ class Projectile(pygame.sprite.Sprite):
         speed: int,
         direction: Vector2,
         damage: int,
-        hit_sound: pygame.mixer.Sound = enemy_hit,
+        hit_sound: pygame.mixer.Sound,
         accuracy: float = 0,
         lifetime: float = INFINITY,
     ):
@@ -328,7 +330,8 @@ class Projectile(pygame.sprite.Sprite):
             ) ** 0.5
             if distance < enemy.size:
                 enemy.health -= self.damage
-                self.hit_sound.play()
+                if self.hit_sound is not None:
+                    self.hit_sound.play()
                 self.kill()
                 return
             if (
