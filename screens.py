@@ -1,9 +1,7 @@
 import json
-
 import pygame
 import time
 from urllib import parse
-
 import requests
 from pygame import SurfaceType
 from pygame_textinput import TextInputVisualizer
@@ -11,6 +9,7 @@ from pygame_textinput import TextInputVisualizer
 from config import WIDTH, HEIGHT
 from classes import Player
 
+# Define fonts and Leaderboard variables
 game_font = pygame.font.Font("Fonts/game_over.ttf", 86)
 big_game_font = pygame.font.Font("Fonts/game_over.ttf", 96)
 you_died_font = pygame.font.Font("Fonts/game_over.ttf", 128)
@@ -19,7 +18,7 @@ CONFIG = json.load(open("config.json", "r"))
 LB_SECRET = CONFIG["LEADERBOARD_SECRET"]
 LB_PUBLIC = CONFIG["LEADERBOARD_PUBLIC"]
 LB_URL = CONFIG["LEADERBOARD_URL"]
-
+# define variables, load images and resize them
 added_user = False
 menu_bg = pygame.image.load("img/Menu.png")
 menu_bg = pygame.transform.scale(menu_bg, (WIDTH, HEIGHT))
@@ -29,7 +28,16 @@ lb_bg = pygame.image.load("img/LB.png")
 lb_bg = pygame.transform.scale(lb_bg, (WIDTH, HEIGHT))
 
 
-def leader_board_screen(screen: SurfaceType, last_response: float, leader_board: bool):
+def leader_board_screen(
+    screen: SurfaceType, last_response: float, leader_board: bool
+) -> tuple[float, bool]:
+    """
+    Display the leaderboard screen
+    :param screen: The screen to display the leaderboard on
+    :param last_response: When the last request to the leaderboard api was made
+    :param leader_board: If the leaderboard screen should be displayed
+    :return: A tuple containing the last_response and if the leaderboard screen should be displayed
+    """
     back_text = game_font.render(
         "Back",
         True,
@@ -83,7 +91,15 @@ def start_screen(
     name_input: TextInputVisualizer,
     started: bool,
     leader_board: bool,
-):
+) -> tuple[str, bool, bool, bool]:
+    """
+    Display the start screen
+    :param screen: The screen to display the start screen on
+    :param name_input: The text input object to get the name of the player
+    :param started: If the game has started
+    :param leader_board: If the leaderboard screen should be displayed
+    :return: A tuple containing the name of the player, if the game has started, if the leaderboard screen should be displayed and if the start screen should be displayed
+    """
     screen.blit(menu_bg, (0, 0))
     events = pygame.event.get()
     title_text = game_font.render(
@@ -144,7 +160,16 @@ def start_screen(
 
 
 # noinspection DuplicatedCode
-def death_screen(screen: SurfaceType, player: Player, running: bool):
+def death_screen(
+    screen: SurfaceType, player: Player, running: bool
+) -> tuple[Player, bool, bool, bool]:
+    """
+    Display the death screen
+    :param screen: The screen to display the death screen on
+    :param player: The player object
+    :param running: If the game is running
+    :return: A tuple containing the player object, if the game is running, if the leaderboard screen should be displayed and if the death screen should be displayed
+    """
     global added_user
     screen.blit(death_bg, (0, 0))
 
@@ -217,7 +242,12 @@ def death_screen(screen: SurfaceType, player: Player, running: bool):
     return player, running, False, True
 
 
-def get_top_users(top_n: int):
+def get_top_users(top_n: int) -> dict:
+    """
+    Get the top n users from the leaderboard
+    :param top_n: The number of users to get
+    :return: A dictionary containing the top n users
+    """
     global LB_PUBLIC, LB_URL
     url = f"{LB_URL}{LB_PUBLIC}/json/{top_n}"
     response = requests.get(url)
@@ -226,6 +256,12 @@ def get_top_users(top_n: int):
 
 
 def add_user(name: str, score: int):
+    """
+    Add a user to the leaderboard
+    :param name: Name of the user
+    :param score: Score of the user
+    :return:
+    """
     global LB_SECRET, LB_URL
     url = f"{LB_URL}{LB_SECRET}/add/{parse.quote_plus(name)}/{score}"
     requests.get(url)
