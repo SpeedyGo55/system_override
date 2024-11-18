@@ -36,4 +36,6 @@ With Esc you can go back to the Start Screen.
 - 3 Weapons you can pick up. The enemies can spawn with these but cant pick them Up
 - Name Input for the Online Dreamlo Leaderboard
 - Dreamlo Leaderboard Integration
+- Highscore Remembering through Name Input
+- MedPacks to heal yourself
 

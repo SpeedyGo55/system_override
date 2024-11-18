@@ -172,7 +172,7 @@ while running:
     if (
         not started and not leader_board
     ):  # If the game is not started and the leader board is not being displayed
-        player.name, started, leader_board, running = (
+        player.name, started, leader_board, running, player.high_score = (
             start_screen(  # Display the start screen
                 screen, name_input, started, leader_board
             )

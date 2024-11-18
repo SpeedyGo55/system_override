@@ -1,4 +1,5 @@
 import json
+
 import pygame
 import time
 from urllib import parse
@@ -119,7 +120,7 @@ def start_screen(
     name_input: TextInputVisualizer,
     started: bool,
     leader_board: bool,
-) -> tuple[str, bool, bool, bool]:
+) -> tuple[str, bool, bool, bool, int]:
     """
     Display the start screen
     :param screen: The screen to display the start screen on
@@ -158,7 +159,7 @@ def start_screen(
         if event.type == pygame.QUIT or (
             event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE
         ):
-            return name_input.value, False, leader_board, False  # Quit the game
+            return name_input.value, False, leader_board, False, 0  # Quit the game
         if (
             event.type == pygame.MOUSEBUTTONDOWN and event.button == 1
         ):  # If the user clicks the left mouse button
@@ -166,11 +167,17 @@ def start_screen(
             if start_rect.collidepoint(
                 mouse_x, mouse_y
             ):  # If the user clicks the start button
-                return name_input.value, True, leader_board, True  # Start the game
+                return (
+                    name_input.value,
+                    True,
+                    leader_board,
+                    True,
+                    get_user(name_input.value),
+                )  # Start the game
             elif quit_rect.collidepoint(
                 mouse_x, mouse_y
             ):  # If the user clicks the quit button
-                return name_input.value, False, leader_board, False  # Quit the game
+                return name_input.value, False, leader_board, False, 0  # Quit the game
             elif leader_board_rect.collidepoint(
                 mouse_x, mouse_y
             ):  # If the user clicks the leaderboard button
@@ -179,6 +186,7 @@ def start_screen(
                     started,
                     True,
                     True,
+                    0,
                 )  # Display the leaderboard screen
     mouse_x, mouse_y = pygame.mouse.get_pos()  # Get the mouse position
     if start_rect.collidepoint(
@@ -211,7 +219,7 @@ def start_screen(
     screen.blit(leader_board_text, leader_board_rect)
 
     pygame.display.flip()
-    return name_input.value, started, leader_board, True
+    return name_input.value, started, leader_board, True, 0
 
 
 # noinspection DuplicatedCode
@@ -343,3 +351,22 @@ def add_user(name: str, score: int):
     global LB_SECRET, LB_URL
     url = f"{LB_URL}{LB_SECRET}/add/{parse.quote_plus(name)}/{score}"  # Add the user to the leaderboard
     requests.get(url)  # Make a request to the leaderboard api
+
+
+def get_user(name: str) -> int:
+    """
+    Get the user from the leaderboard
+    :param name: Name of the user
+    :return: The score of the user or 0 if the user does not exist
+    """
+    global LB_PUBLIC, LB_URL
+    if not name:
+        return 0
+    url = f"{LB_URL}{LB_PUBLIC}/pipe-get/{parse.quote_plus(name)}"  # Get the user from the leaderboard
+    response = requests.get(url)  # Make a request to the leaderboard api
+    try:
+        _name, score, *_ = response.text.split("|")  # Parse the response
+    except ValueError as e:
+        print(e)
+        return 0
+    return int(score)  # Return the score of the user
