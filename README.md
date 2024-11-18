@@ -18,6 +18,7 @@ pip install -r requirements.txt
   "LEADERBOARD_URL": "http://dreamlo.com/lb/"
 }
 ```
+You can get the keys for free from [Dreamlo](http://dreamlo.com/)
 4. Run the game
 ```bash
 python main.py
