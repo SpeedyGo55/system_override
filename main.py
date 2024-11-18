@@ -3,6 +3,7 @@ from random import random
 import pygame_textinput
 import pygame
 
+
 # Importing my own modules
 from classes import Player, Weapon, player_death
 from config import WIDTH, HEIGHT, FPS
@@ -26,7 +27,10 @@ screen = pygame.display.set_mode(
     (WIDTH, HEIGHT), pygame.FULLSCREEN
 )  # Set the screen size and mode (fullscreen)
 pygame.display.set_caption("System Override")  # Set the window title
+icon = pygame.image.load("img/SO.png")  # Load the icon image
+pygame.display.set_icon(icon)
 clock = pygame.time.Clock()  # Create a clock object to control the frame rate
+
 
 # Variables
 name = ""
@@ -163,7 +167,8 @@ def play_screen():
     pygame.display.flip()
 
 
-while running:  # Main loop
+while running:
+    # Main loop
     if (
         not started and not leader_board
     ):  # If the game is not started and the leader board is not being displayed

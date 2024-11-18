@@ -11,6 +11,8 @@ from classes import Player
 
 # Define fonts and Leaderboard variables
 game_font = pygame.font.Font("Fonts/game_over.ttf", 86)
+title_font = pygame.font.Font("Fonts/game_over.ttf", 128)
+credit_font = pygame.font.Font("Fonts/game_over.ttf", 32)
 big_game_font = pygame.font.Font("Fonts/game_over.ttf", 96)
 you_died_font = pygame.font.Font("Fonts/game_over.ttf", 128)
 score_font = pygame.font.Font("Fonts/game_over.ttf", 64)
@@ -77,7 +79,18 @@ def leader_board_screen(
             leader_board,
         )  # Return the last response and if the leaderboard screen should be displayed
 
-    top_users = get_top_users(5)["dreamlo"]["leaderboard"]["entry"]
+    try:
+        top_users = get_top_users(5)["dreamlo"]["leaderboard"]["entry"]
+    except Exception as e:
+        screen.blit(
+            lb_bg, back_rect.scale_by(1.1).topleft, back_rect.scale_by(1.1)
+        )  # only draw the background where the back button is
+        screen.blit(back_text, back_rect)
+        pygame.display.flip()
+        return (
+            last_response,
+            leader_board,
+        )  # Return the last response and if the leaderboard screen should be displayed
     screen.blit(lb_bg, (0, 0))
     y = 0
     for user in top_users:
@@ -119,12 +132,12 @@ def start_screen(
     events = pygame.event.get()
 
     # Render text and get rects
-    title_text = game_font.render(
+    title_text = title_font.render(
         "System Override",
         True,
         (255, 0, 0),
     )
-    title_rect = title_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 100))
+    title_rect = title_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 110))
 
     name_input_rect = name_input.surface.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 50))
 
@@ -136,6 +149,10 @@ def start_screen(
     leader_board_rect = leader_board_text.get_rect(
         center=(WIDTH // 2, HEIGHT // 2 + 100)
     )
+    credits_text = credit_font.render(
+        "Copyright Luca Buholzer & Niklas Schrader", True, (0, 0, 0)
+    )
+    credits_rect = credits_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 200))
 
     for event in events:
         if event.type == pygame.QUIT or (
@@ -190,6 +207,7 @@ def start_screen(
     screen.blit(name_input.surface, name_input_rect)
     screen.blit(start_text, start_rect)
     screen.blit(quit_text, quit_rect)
+    screen.blit(credits_text, credits_rect)
     screen.blit(leader_board_text, leader_board_rect)
 
     pygame.display.flip()
