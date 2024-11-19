@@ -209,6 +209,7 @@ def start_screen(
 
     # noinspection PyTypeChecker
     name_input.update(events)
+    name_input.value = name_input.value.replace(" ", "")
 
     # Draw everything to the screen
     screen.blit(title_text, title_rect)
